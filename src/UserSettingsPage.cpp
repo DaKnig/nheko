@@ -139,7 +139,8 @@ UserSettings::load(std::optional<QString> profile)
     userId_        = settings.value(prefix + "auth/user_id", "").toString();
     deviceId_      = settings.value(prefix + "auth/device_id", "").toString();
     hiddenTags_    = settings.value(prefix + "user/hidden_tags", QStringList{}).toStringList();
-    hiddenPins_    = settings.value(prefix + "user/hidden_pins", QStringList{}).toStringList();
+    mutedTags_  = settings.value(prefix + "user/muted_tags", QStringList{"global"}).toStringList();
+    hiddenPins_ = settings.value(prefix + "user/hidden_pins", QStringList{}).toStringList();
     hiddenWidgets_ = settings.value(prefix + "user/hidden_widgets", QStringList{}).toStringList();
     recentReactions_ =
       settings.value(prefix + "user/recent_reactions", QStringList{}).toStringList();
@@ -220,14 +221,21 @@ UserSettings::setGroupView(bool state)
 }
 
 void
-UserSettings::setHiddenTags(QStringList hiddenTags)
+UserSettings::setHiddenTags(const QStringList &hiddenTags)
 {
     hiddenTags_ = hiddenTags;
     save();
 }
 
 void
-UserSettings::setHiddenPins(QStringList hiddenTags)
+UserSettings::setMutedTags(const QStringList &mutedTags)
+{
+    mutedTags_ = mutedTags;
+    save();
+}
+
+void
+UserSettings::setHiddenPins(const QStringList &hiddenTags)
 {
     hiddenPins_ = hiddenTags;
     save();
@@ -235,7 +243,7 @@ UserSettings::setHiddenPins(QStringList hiddenTags)
 }
 
 void
-UserSettings::setHiddenWidgets(QStringList hiddenTags)
+UserSettings::setHiddenWidgets(const QStringList &hiddenTags)
 {
     hiddenWidgets_ = hiddenTags;
     save();
@@ -840,6 +848,7 @@ UserSettings::save()
                       onlyShareKeysWithVerifiedUsers_);
     settings.setValue(prefix + "user/online_key_backup", useOnlineKeyBackup_);
     settings.setValue(prefix + "user/hidden_tags", hiddenTags_);
+    settings.setValue(prefix + "user/muted_tags", mutedTags_);
     settings.setValue(prefix + "user/hidden_pins", hiddenPins_);
     settings.setValue(prefix + "user/hidden_widgets", hiddenWidgets_);
     settings.setValue(prefix + "user/recent_reactions", recentReactions_);
@@ -1438,7 +1447,7 @@ UserSettingsModel::data(const QModelIndex &index, int role) const
         case SpaceNotifications:
             return QStringList{QStringLiteral("Sidebar and room list"),
                                QStringLiteral("Sidebar"),
-                               QStringLiteral("Sidebar (hidden rooms only)"),
+                               QStringLiteral("Sidebar (hidden spaces and tags only)"),
                                QStringLiteral("Off")};
         }
     } else if (role == Good) {
